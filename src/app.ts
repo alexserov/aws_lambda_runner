@@ -1,6 +1,8 @@
 import express from 'express';
 import handlePing from './event-handlers/ping';
 import handleCheckRun from './event-handlers/workflow-job';
+import { initJobQueue } from './helpers/job-queue';
+import { initRunnerManager } from './helpers/runner-manager';
 
 // eslint-disable-next-line no-unused-vars
 const eventMap: Map<string, ((req: express.Request, res: express.Response) => void)> = new Map([
@@ -9,6 +11,8 @@ const eventMap: Map<string, ((req: express.Request, res: express.Response) => vo
 ]);
 const app = express();
 app.use(express.json());
+initJobQueue(app);
+initRunnerManager(app, { maxCount: 100 });
 
 app.post('/', (req, res): void => {
   const header = req.headers['x-github-event'];

@@ -1,7 +1,7 @@
 import knownLabel from '../../known-labels';
 
 // https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_job
-export type data = {
+export type RawJob = {
   action: 'queued' | 'in_progress' | 'completed';
   'workflow_job': {
     'id': number;
