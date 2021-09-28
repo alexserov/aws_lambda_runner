@@ -7,6 +7,8 @@ const octokit = new Octokit({
     auth: GH_TOKEN_ELEVATED,
 });
 
+export const targetUrl = `https://github.com/${ORG_NAME}${REPO_NAME ? `/${REPO_NAME}` : ''}`;
+
 export async function getRegistrationToken(): Promise<string> {
     let response;
     if (!ORG_NAME) {
