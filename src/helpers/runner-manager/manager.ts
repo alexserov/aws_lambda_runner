@@ -79,17 +79,23 @@ export class RunnerManager {
             `--labels ${type}`,
         ].join(' ');
 
-        const execResult = await promisify(exec)(`${scriptName} ${args}`);
-
-        if (execResult.stderr) {
-            throw new Error(execResult.stderr);
-        }
         const fieldNames = ['.credentials', '.credentials_rsaparams', '.env', '.path', '.runner'] as const;
-        const map = await Promise.all(fieldNames.map(async (x) => ({
-            key: x,
-            value: JSON.parse((await readFileAsync(join(HOST_RUNNER_DIR || '', x))).toString()),
-        }))).then((x) => x.reduce((prev, curr) => prev.set(curr.key, curr.value), new Map()));
-        await Promise.all(fieldNames.map((x) => unlinkAsync(x)));
+        const performCleanup = () => Promise.all(fieldNames.map((x) => join(HOST_RUNNER_DIR, x)).map(async (x) => {
+            if (await existsAsync(x)) { await unlinkAsync(x); }
+        }));
+        await performCleanup();
+
+        await promisify(exec)(`${scriptName} ${args}`);
+
+        const map = await Promise.all(fieldNames.map(async (x) => {
+            // eslint-disable-next-line no-control-regex
+            const fileData = (await readFileAsync(join(HOST_RUNNER_DIR || '', x))).toString('utf-8');
+            return ({
+                key: x,
+                value: fileData,
+            });
+        })).then((x) => x.reduce((prev, curr) => prev.set(curr.key, curr.value), new Map()));
+        await performCleanup();
 
         return Object.fromEntries(map);
     }
