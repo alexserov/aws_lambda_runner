@@ -11,13 +11,18 @@
         "ecmaVersion": 12,
         "sourceType": "module"
     },
-    "ignorePatterns": "build/**",
+    "ignorePatterns": "build",
     "plugins": [
         "@typescript-eslint"
     ],
     "rules": {
         "no-console": "off",
         "import/extensions": "off",
-        "import/no-unresolved": "off"
+        "import/no-unresolved": "off",
+        "no-plusplus": "off",
+        "no-continue": "off",
+        "class-methods-use-this": "off",
+        "max-len": "off",
+        "indent":["warn", 4]
     }
 }

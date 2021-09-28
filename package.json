@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/alexserov/aws_lambda_runner#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "@octokit/rest": "^18.11.2",
+    "express": "^4.17.1",
+    "octokit": "^1.6.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",

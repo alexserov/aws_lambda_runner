@@ -4,7 +4,7 @@ import express from 'express';
 
 // eslint-disable-next-line no-unused-vars
 function handleEvent(req: express.Request, res: express.Response): void {
-  console.log(JSON.stringify(req.body, null, 2));
+    console.log(JSON.stringify(req.body, null, 2));
 }
 
 export default { ping: handleEvent };

@@ -1,12 +1,10 @@
 import express from 'express';
-import { RawJob } from '../event-handlers/workflow-job/data';
+import { RawJob } from '../../event-handlers/workflow-job/data';
 
-const globalKey = '75419979-6766-411c-9e0a-082aa600f442';
-
-interface JobQueueItem {
+export type JobQueueItem {
 
 }
-class JobQueue {
+export class JobQueue {
     private items: Array<JobQueueItem>;
 
     private app: express.Application;
@@ -29,13 +27,3 @@ class JobQueue {
 
     }
 }
-
-function jobQueue(app: express.Application): JobQueue {
-  return app.get(globalKey);
-}
-function initJobQueue(app: express.Application) {
-  app.set(globalKey, new JobQueue(app));
-}
-
-export default JobQueue;
-export { initJobQueue, jobQueue };
