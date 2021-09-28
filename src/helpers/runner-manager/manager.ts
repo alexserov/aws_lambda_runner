@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-    access, constants, readFile, unlink,
+    access, constants, readFile, unlink, writeFile,
 } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';
@@ -13,11 +13,12 @@ import { getRegistrationToken, targetUrl } from '../github-api';
 const accessAsync = promisify(access);
 const existsAsync = (f: string) => accessAsync(f, constants.F_OK).then(() => true).catch(() => false);
 const readFileAsync = promisify(readFile);
+const writeFileAsync = promisify(writeFile);
 const unlinkAsync = promisify(unlink);
 
 export type RunnerManagerConfig = {
     // eslint-disable-next-line no-unused-vars
-    [key in typeof VMType[number]]: number;
+    [key in typeof VMType[number]]?: number;
 }
 
 export class RunnerManager {
@@ -38,7 +39,7 @@ export class RunnerManager {
     }
 
     private async initRunners(): Promise<void> {
-        if (this.loadCachedRunners()) {
+        if (await this.loadCachedRunners()) {
             return;
         }
         const registrationToken = await getRegistrationToken();
@@ -48,13 +49,16 @@ export class RunnerManager {
             const maxCount = this.config[type] || 0;
             if (!maxCount) { continue; }
             const array: Array<RunnerInstance> = [];
-            for (let i = 0; i < maxCount; i++) {
-                // WARNING: do not convert this to promise.all
+
+            // TODO: keep i = 0 for default runner
+            for (let i = 1; i <= maxCount; i++) {
+                // WARNING: do not convert this to promise.all. We need to reed and remove files synchronously.
                 // eslint-disable-next-line no-await-in-loop
                 array.push(await this.registerRunner(type, i, registrationToken));
             }
             this.runners.set(type, array);
         }
+        await writeFileAsync('.cachedRunners', JSON.stringify(Object.fromEntries(this.runners), null, 2));
     }
 
     private async registerRunner(type: string, i: number, registrationToken: string): Promise<RunnerInstance> {
@@ -66,7 +70,17 @@ export class RunnerManager {
             throw new Error(`GitHub runner does not exist at path ${scriptName}`);
         }
 
-        const execResult = await promisify(exec)(`${scriptName} --url ${targetUrl} --token ${registrationToken}`);
+        const args = [
+            `--url ${targetUrl}`,
+            `--token ${registrationToken}`,
+            '--unattended', // no prompts
+            '--replace', // overwrite already existing runners (if found)
+            `--name sh-${type}-${i}`,
+            `--labels ${type}`,
+        ].join(' ');
+
+        const execResult = await promisify(exec)(`${scriptName} ${args}`);
+
         if (execResult.stderr) {
             throw new Error(execResult.stderr);
         }
@@ -80,7 +94,12 @@ export class RunnerManager {
         return Object.fromEntries(map);
     }
 
-    private loadCachedRunners(): boolean {
-        throw new Error('Method not implemented.');
+    private async loadCachedRunners(): Promise<boolean> {
+        if (await existsAsync('.cachedRunners')) {
+            const data = JSON.parse((await readFileAsync('.cachedRunners')).toString());
+            this.runners = new Map(Object.entries(data)) as any;
+            return true;
+        }
+        return false;
     }
 }

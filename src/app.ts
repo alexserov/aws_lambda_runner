@@ -13,7 +13,7 @@ async function main() {
     const app = express();
     app.use(express.json());
     initJobQueue(app);
-    await initRunnerManager(app, { maxCount: 100 });
+    await initRunnerManager(app, { 'ubuntu-lambda': 10 });
 
     app.post('/', (req, res): void => {
         const header = req.headers['x-github-event'];
