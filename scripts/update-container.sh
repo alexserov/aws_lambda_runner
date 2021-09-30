@@ -57,10 +57,7 @@ docker build -t ${REPO_NAME} ./../docker
 log "Logging in"
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 log "Checking repository"
-if [ ! $(aws ecr describe-repositories --repository-names ${REPO_NAME} > /dev/null 2>&1) ]; then
-    log "Repository does not exist, creating"
-    aws ecr create-repository --repository-name ${REPO_NAME} --image-scanning-configuration scanOnPush=true --region ${AWS_REGION}
-fi
+aws ecr create-repository --repository-name ${REPO_NAME} --image-scanning-configuration scanOnPush=true --region ${AWS_REGION}
 log "Pushing image"
 docker tag ${REPO_NAME}:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:latest
 docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:latest
